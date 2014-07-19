@@ -1,0 +1,3 @@
+import scraper
+
+scraper.generateGoodLinksCBC()
