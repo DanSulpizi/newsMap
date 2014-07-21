@@ -1,3 +1,3 @@
-import scraper
+import cleanScrapeCBC
 
-scraper.generateGoodLinksCBC()
+cleanScrapeCBC.generateGoodLinksCBC()

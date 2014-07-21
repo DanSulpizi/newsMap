@@ -6,7 +6,7 @@ def iround(x):
     y = round(x) - .5
     return int(y) + (y > 0)
 
-f = open('glds00g30.txt', 'r')
+f = open('glds00g15', 'r')
 
 popDen = []
 
@@ -14,7 +14,7 @@ popDen = []
 
 latMin = -58
 latMax = 85
-resolution = 2
+resolution = 4
 
 passedFirst = False
 for line in f:
@@ -54,11 +54,16 @@ for line in f:
         
         if cityCode != "":
             if(lat > latMin and lat < latMax):
-
-                density = float(popDen[(latMax-iround(lat))*resolution][(min(iround(long)+180,len(popDen[0])-1))*resolution])
+                latPos = (latMax-iround(lat))*resolution
+                longPos = (min((iround(long)+180)*resolution,len(popDen[0])-1))
+                
+                # if(location == 'spyketv4n0'):
+                    # print latPos
+                    # print longPos
+                density = float(popDen[latPos][longPos])
                 if density < 0: density = -1
         
-        s = location
+        s = cityCode+location
         if not s in citySet:
             citySet.add(s)
             if(cityCode != "" or regionCode == ""):

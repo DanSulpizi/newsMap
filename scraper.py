@@ -57,6 +57,33 @@ def getItemsFromCBCArticle(url):
     text = tree.xpath('//body//div[@class="content-body story"]//div[@class="story-body"]/div[@class="story-content"]/p//text()')
     return {"headline" : headline, "subline" : subline, "date" : date, "url" : url, "text" : text}
 
+def loadCountryList():
+    #load Countries and Country Abbreviations
+    f = open('CountriesAbr.txt', 'r')
+    countryList = {}
+    for line in f:
+        abbrCount = line.split(',')
+        countryList[abbrCount[0].lower()] = abbrCount[1].lower().rstrip()
+    f.close()
+    
+    return countryList
+    
+def loadCityList():
+    #Load Cities
+    f = open('Cities.txt', 'r')
+    cityList = {}
+    i = 0
+    for line in f:
+        city = line.split(',')
+        cityKey = city[3].lower().replace('.','').rstrip()
+        if cityKey in cityList:
+            cityList[cityKey].append(Location(city[1].lower(),city[2].lower(),city[3].lower().rstrip(),city[0].lower(),city[4].lower()))
+        else:
+            cityList[cityKey] = [Location(city[1].lower(),city[2].lower(),city[3].lower().rstrip(),city[0].lower(),city[4].lower()),]
+    f.close()
+    
+    return cityList
+ 
 #MERGES IDENTICAL LOCATION NAMES
 def getCondensedLocationList(locationList, wordCount):
     #TODO DETERMINE WEIGHTINGS OF WORDCOUNT
@@ -196,35 +223,8 @@ def addCountryOrCity(w, score, cityList, countryList, outCityList, outCountryLis
         for country in countryList: 
             if regexp.search(countryList[country].lower()) is not None:
                 outCountryList.append([country, score/(countryList[country].count(' ')+1)])
-                found == True
-
-def loadCountryList():
-    #load Countries and Country Abbreviations
-    f = open('CountriesAbr.txt', 'r')
-    countryList = {}
-    for line in f:
-        abbrCount = line.split(',')
-        countryList[abbrCount[0].lower()] = abbrCount[1].lower().rstrip()
-    f.close()
-    
-    return countryList
-    
-def loadCityList():
-    #Load Cities
-    f = open('Cities.txt', 'r')
-    cityList = {}
-    i = 0
-    for line in f:
-        city = line.split(',')
-        cityKey = city[3].lower().replace('.','').rstrip()
-        if cityKey in cityList:
-            cityList[cityKey].append(Location(city[1].lower(),city[2].lower(),city[3].lower().rstrip(),city[0].lower(),city[4].lower()))
-        else:
-            cityList[cityKey] = [Location(city[1].lower(),city[2].lower(),city[3].lower().rstrip(),city[0].lower(),city[4].lower()),]
-    f.close()
-    
-    return cityList
-    
+                found == True 
+ 
 def workWithArticleItems(articleItems, cityList, countryList): 
 
     if articleItems != None:        
@@ -242,7 +242,6 @@ def workWithArticleItems(articleItems, cityList, countryList):
         print date
         print url
         print source
-        
         
         outCityList = []
         outCountryList = []
@@ -323,19 +322,3 @@ def workWithArticleItems(articleItems, cityList, countryList):
         
         findMatchingCities(condensedCities, condensedCountries, cityList, countryList, 0.25)
     
-def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//div[@class="wrap8 landing-primary"]//a/@href'):
-    linkList = generalScrape(url, xPath, True)
-    cleanLinkList = []
-    
-    for link in linkList:
-        if ("http://" not in link and "#" not in link and "?" not in link):
-            cleanLinkList.append("http://www.cbc.ca" + link)
-            print link
-    
-    countryList = loadCountryList()
-    cityList = loadCityList()
-    
-    # for link in cleanLinkList:
-    for link in [cleanLinkList[0]]:
-        articleItems = getItemsFromCBCArticle(link)
-        workWithArticleItems(articleItems, cityList, countryList)

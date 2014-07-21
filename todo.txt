@@ -1,1 +1,3 @@
 Handles States in place of US
+Handle names only if appropriate country is found
+score should be a list of modifiers
