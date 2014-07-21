@@ -75,11 +75,9 @@ class NewsPageClassifier:
             f.close()
    
     class Score:
-        #TODO
-        matchBonus = 1.5
-    
-        isHeadline = False
-        isSubline = False
+        #TODO   
+        isHeadline = 0
+        isSubline = 0
         
         numCombinedScores = 1
         
@@ -114,8 +112,8 @@ class NewsPageClassifier:
             self.numCombinedScores += score.numCombinedScores   
         
         def combine(self, score, matchBonus = True):
-            self.isHeadline = (self.isHeadline or score.isHeadline)
-            self.isSubline = (self.isSubline or score.isSubline)
+            self.isHeadline = (self.isHeadline or score.isHeadline) + (self.isHeadline and score.isHeadline)
+            self.isSubline = (self.isSubline or score.isSubline) + (self.isHeadline and score.isHeadline)
             self.provinceMatch = (self.provinceMatch or score.provinceMatch)
             
             self.numInBefore = (self.numInBefore*self.numCombinedScores + score.numInBefore*score.numCombinedScores) / (self.numCombinedScores + score.numCombinedScores)
@@ -130,7 +128,9 @@ class NewsPageClassifier:
             self.numCombinedScores = (score.numCombinedScores + self.numCombinedScores)/2
 
         def toValue(self):
-            #TODO
+            #TODO machine learn these scores / think up more criteria
+            matchBonus = 1.5
+            
             out = self.perCombinedScores
             # out = 1
         
@@ -179,7 +179,7 @@ class NewsPageClassifier:
         locations = []
 
     #Todo, get data list of officials
-    forbiddenNames = ["Vladimir Putin", "Putin", "President Barack Obama", "Barack Obama", "Obama", "Merek", "Costa Concordia", "Nobel Prize", "Van Dam", "Mark Rutte"]
+    forbiddenNames = ["Vladimir Putin", "Putin", "President Barack Obama", "Barack Obama", "Obama", "Merek", "Costa Concordia", "Nobel Prize", "Van Dam", "Mark Rutte", "Iron Dome", "Iron Curtain",]
 
     def __init__(self, articleItems):
         self.articleItems = articleItems
@@ -241,7 +241,7 @@ class NewsPageClassifier:
                     for country in self.locationLists.countryList:
                         if regexp.search(country[1].lower()) is not None:
                         
-                            currScore.matchPercent = len(w)/float(len(country[1]))
+                            currScore.matchPercent = len(w)/float(len(country[1].replace(' ','')))
                                 
                             if country[0] in self.countriesInArticle: self.countriesInArticle[country[0]].add(currScore)
                             else: self.countriesInArticle[country[0]] = deepcopy(currScore)
@@ -318,8 +318,9 @@ class NewsPageClassifier:
                                     
                             if(not inList2): location.key.append(NNP[0])
                             break
-                            
-                    NNP[-1].matchPercent = len(NNP[0])/float(len(result[-1]))
+                    
+                    #TODO should cities gain the headline bonus of their country?
+                    NNP[-1].matchPercent = len(NNP[0])/float(len(result[-1].replace(' ','')))
                     sc.combine(NNP[-1])
                     
                     if(not inList):
