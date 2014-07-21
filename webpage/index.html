@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=utf-8 />
+        <title>Plain Leaflet API</title>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+        <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+        
+        <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+        <link rel="stylesheet" href="style.css" type="text/css" />
+    </head>
+    <body>
+        <div id='map'></div>
+
+        <script>
+            var mapboxTiles = L.tileLayer('https://{s}.tiles.mapbox.com/v3/dansulpizi.j17d6k3p/{z}/{x}/{y}.png', {
+                attribution: '<a href="http://www.mapbox.com/about/maps/" target="_blank">Terms &amp; Feedback</a>'
+            });
+
+            var map = L.map('map')
+                .addLayer(mapboxTiles)
+                .setView([30,0], 2);
+                
+            var marker = L.marker([51.5, -0.09]).addTo(map);
+            
+            var circle = L.circle([51.5, -0.09], 50000, {
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.25
+            }).addTo(map);
+        </script>
+    </body>
+</html>

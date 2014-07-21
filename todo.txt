@@ -1,3 +1,4 @@
-Handles States in place of US
-Handle names only if appropriate country is found
-score should be a list of modifiers
+Only scrape if document updated since last check
+Be able to search by date/location
+
+classify articles by genre

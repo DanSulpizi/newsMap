@@ -112,6 +112,8 @@ class NewsPageClassifier:
             self.numCombinedScores += score.numCombinedScores   
         
         def combine(self, score, matchBonus = True):
+            matchBonus = 1.5
+            
             self.isHeadline = (self.isHeadline or score.isHeadline) + (self.isHeadline and score.isHeadline)
             self.isSubline = (self.isSubline or score.isSubline) + (self.isHeadline and score.isHeadline)
             self.provinceMatch = (self.provinceMatch or score.provinceMatch)
@@ -123,13 +125,12 @@ class NewsPageClassifier:
             self.sentencePosition = (self.sentencePosition*self.numCombinedScores + score.sentencePosition*score.numCombinedScores) / (self.numCombinedScores + score.numCombinedScores)
             
             self.matchPercent = (self.matchPercent*score.matchPercent)
-            if(matchBonus): self.matchPercent*= self.matchBonus
+            if(matchBonus): self.matchPercent*= matchBonus
                 
             self.numCombinedScores = (score.numCombinedScores + self.numCombinedScores)/2
 
         def toValue(self):
             #TODO machine learn these scores / think up more criteria
-            matchBonus = 1.5
             
             out = self.perCombinedScores
             # out = 1
@@ -148,8 +149,8 @@ class NewsPageClassifier:
             return out
         
         def __str__(self):
-            # return str(self.toValue())
-            return self.printInfo()
+            return str(self.toValue())
+            # return self.printInfo()
             
         def printInfo(self):
             #Value, headline, subline, in before, near before, from before, sentence pos, match %, numScores
@@ -166,17 +167,23 @@ class NewsPageClassifier:
             self.population = float(pop)
             
         def __str__(self):
+            return self.country + "," + self.province + "," + self.city + "," + self.location + "," + str(self.population)
+        
+        def printInfo(self):
             return str(self.score) + "     " + str(self.key) + " " + self.country + ", " + self.province + ", " + self.city + ",.  " + self.location + " " + str(self.population)
             
     class Article:   
-        def __init__(self, headline, subline, date, url, source):
+        def __init__(self, headline, subline, date, url, source, primaryLocation, secondaryLocations):
             self.headline = headline
             self.subline = subline
             self.date = date
             self.url = url
             self.source = source
+            self.primaryLocation = primaryLocation
+            self.secondaryLocations = secondaryLocations
             
-        locations = []
+        def __str__(self):
+            return "\n######################################################\n" + str(self.headline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','') + "\n" + str(self.subline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','') + "\n" + str(self.date) + "\n" + str(self.url) + "\n" + str(self.source) + "\n" + str(self.primaryLocation) + "\n" + str(self.secondaryLocations) + "\n"
 
     #Todo, get data list of officials
     forbiddenNames = ["Vladimir Putin", "Putin", "President Barack Obama", "Barack Obama", "Obama", "Merek", "Costa Concordia", "Nobel Prize", "Van Dam", "Mark Rutte", "Iron Dome", "Iron Curtain",]
@@ -273,7 +280,7 @@ class NewsPageClassifier:
                             break
                     if(found): break
         
-        print foundProvinces
+        # print foundProvinces
         
         for NNP in self.listOfNNP:
             regexp = re.compile(r'\b%s\b' % NNP[0], re.I)
@@ -343,15 +350,15 @@ class NewsPageClassifier:
     
         self.locationList.sort(key=lambda x: x.score.toValue(), reverse=True)
            
-        for location in self.locationList[0:5]:
-        # for location in self.locationList:
-            print location
+        # for location in self.locationList[0:5]:
+            # print location.printInfo()
             
     def workWithArticleItems(self):
         self.countriesInArticle = {}
         self.listOfNNP = []
         self.length = 0
         if(self.articleItems != None):
+            print "#"
             
             headline = self.articleItems["headline"][0]
             subline = self.articleItems["subline"]
@@ -366,55 +373,76 @@ class NewsPageClassifier:
                     date = each
                 elif "Updated" in each:
                     date = each
+            
+            c = conn.cursor()
+            currResults = []
+            
+            t = (url,)
+            c.execute('SELECT url,date FROM articles WHERE url=?', t)
+            currResults = c.fetchone()
 
-            article = self.Article(headline, subline, date, url, source) 
-            
-            
-            print ""
-            print "######################################################"
-            print headline.replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','')
-            print subline.replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','')
-            print date
-            print url
-            print source
-            
-            #separate words
-            headlineWorker = headline.replace('-', ' ')
-            sublineWorker = subline.replace('-', ' ')
-            
-            #replace all forbiddenNames with blanks
-            for word in self.forbiddenNames:
-                headlineWorker = headlineWorker.replace(word, '')
-                sublineWorker = sublineWorker.replace(word, '')
-            
-            #headline
-            tokens = word_tokenize(headlineWorker)
-            partsOfSpeech = pos_tag(tokens)
-            
-            self.findCountriesInPOS(partsOfSpeech, isHeadline = True)
-
-            #subline
-            tokens = word_tokenize(sublineWorker)
-            partsOfSpeech = pos_tag(tokens)
-            
-            self.findCountriesInPOS(partsOfSpeech, isSubline = True)
-               
-            sentenceNum = len(self.articleItems["text"])
-            sentenceCount = 0   
-            for sentence in self.articleItems["text"]:
-                sentence = sentence.replace('-', ' ')
+            if not currResults or date != currResults[-1]:
+        
+                #separate words
+                headlineWorker = headline.replace('-', ' ')
+                sublineWorker = subline.replace('-', ' ')
+                
+                #replace all forbiddenNames with blanks
                 for word in self.forbiddenNames:
-                    sentence = sentence.replace(word, '')
-                    
-                tokens = word_tokenize(sentence)
+                    headlineWorker = headlineWorker.replace(word, '')
+                    sublineWorker = sublineWorker.replace(word, '')
+                
+                #headline
+                tokens = word_tokenize(headlineWorker)
                 partsOfSpeech = pos_tag(tokens)
                 
-                self.findCountriesInPOS(partsOfSpeech, sentence = sentenceCount, sentenceNum = sentenceNum)
-                sentenceCount += 1
+                self.findCountriesInPOS(partsOfSpeech, isHeadline = True)
+
+                #subline
+                tokens = word_tokenize(sublineWorker)
+                partsOfSpeech = pos_tag(tokens)
                 
-            # for each in self.countriesInArticle: print each + " " + self.countriesInArticle[each].printInfo()
-            
-            self.findCitiesInCountries()
+                self.findCountriesInPOS(partsOfSpeech, isSubline = True)
+                   
+                sentenceNum = len(self.articleItems["text"])
+                sentenceCount = 0   
+                for sentence in self.articleItems["text"]:
+                    sentence = sentence.replace('-', ' ')
+                    for word in self.forbiddenNames:
+                        sentence = sentence.replace(word, '')
+                        
+                    tokens = word_tokenize(sentence)
+                    partsOfSpeech = pos_tag(tokens)
+                    
+                    self.findCountriesInPOS(partsOfSpeech, sentence = sentenceCount, sentenceNum = sentenceNum)
+                    sentenceCount += 1
+                    
+                # for each in self.countriesInArticle: print each + " " + self.countriesInArticle[each].printInfo()
+                
+                self.findCitiesInCountries()
+                
+                returnList = []
+                
+                firstFlag = False
+                for item in self.locationList:
+                    if(not firstFlag): firstFlag = True
+                    else:
+                        if(item.score.toValue() > (self.locationList[0].score.toValue()/2.)):
+                            returnList.append(item.location)
+                
+                
+                article = self.Article(headline, subline, date, url, source, self.locationList[0], returnList)
+
+                # print type(self.locationList[0])
+                
+                # print headline+ " " +subline+ " " +date+ " " +url+ " " +source+ " " +self.locationList[0]+ " " +returnList
+                
+                t = (headline,subline,date,url,source,str(self.locationList[0].location),(str(self.locationList[0].city) + " " + str(self.locationList[0].country)),str(returnList),)
+                c.execute('INSERT or REPLACE into articles(headline, subline, date, url, source, primaryLocation, locationName, secondaryLocations) values(?,?,?,?,?,?,?,?)', t)
+                
+
+            else: return 
+        else: return 
 
 def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//div[@class="wrap8 landing-primary"]//a/@href'):
     linkList = generalScrape(url, xPath, True)
@@ -431,3 +459,5 @@ def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//
         articleItems = getItemsFromCBCArticle(link)
         npc = NewsPageClassifier(articleItems)
         npc.workWithArticleItems()
+        
+    conn.commit()
