@@ -1,6 +1,6 @@
 include "AT" in score near, IN, from, ect.
 
-
+generate json Currently uses set so order is not preserved
 
 Be able to search by date/location
 

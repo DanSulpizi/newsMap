@@ -2,11 +2,11 @@ import sqlite3
 import geohasher
 conn = sqlite3.connect('locations.db')
 
-articleLoc = {}
+articleLoc = []
 
 t = ()
 c = conn.cursor()
-c.execute('SELECT primaryLocation,headline,subline,date,url,source,locationName,secondaryLocations,timestamp FROM articles WHERE (timestamp >= date("now", "-7 days")) ORDER BY timestamp DESC limit 100', t)
+c.execute('SELECT primaryLocation,headline,subline,date,url,source,locationName,secondaryLocations,timestamp FROM articles WHERE (timestamp >= date("now", "-7 days")) ORDER BY datetime(timestamp) DESC limit 100', t)
 
 for each in c.fetchall():
     latlong = geohasher.decode(each[0])
