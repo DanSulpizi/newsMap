@@ -358,8 +358,7 @@ class NewsPageClassifier:
         self.listOfNNP = []
         self.length = 0
         if(self.articleItems != None):
-            print "#"
-            
+           
             headline = self.articleItems["headline"][0]
             subline = self.articleItems["subline"]
             if(len(subline) > 0): subline = subline[0]
@@ -381,8 +380,7 @@ class NewsPageClassifier:
             c.execute('SELECT url,date FROM articles WHERE url=?', t)
             currResults = c.fetchone()
 
-            if not currResults or date != currResults[-1]:
-        
+            if not currResults or date != currResults[-1]:                
                 #separate words
                 headlineWorker = headline.replace('-', ' ')
                 sublineWorker = subline.replace('-', ' ')
@@ -433,7 +431,7 @@ class NewsPageClassifier:
                 
                 article = self.Article(headline, subline, date, url, source, self.locationList[0], returnList)
 
-                # print type(self.locationList[0])
+                print str(headline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','')
                 
                 # print headline+ " " +subline+ " " +date+ " " +url+ " " +source+ " " +self.locationList[0]+ " " +returnList
                 
@@ -441,7 +439,9 @@ class NewsPageClassifier:
                 c.execute('INSERT or REPLACE into articles(headline, subline, date, url, source, primaryLocation, locationName, secondaryLocations) values(?,?,?,?,?,?,?,?)', t)
                 
 
-            else: return 
+            else:
+                print "#"
+                return 
         else: return 
 
 def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//div[@class="wrap8 landing-primary"]//a/@href'):
@@ -461,3 +461,4 @@ def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//
         npc.workWithArticleItems()
         
     conn.commit()
+    conn.close()

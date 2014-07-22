@@ -22,7 +22,7 @@ provinces = {
 "me" : ["maine"],
 "md" : ["maryland"],
 "ma" : ["massachusetts"],
-"mi" : ["michigan"],
+"mi" : ["michigan", "detroit",],
 "mn" : ["minnesota"],
 "ms" : ["mississippi"],
 "mo" : ["missouri"],
