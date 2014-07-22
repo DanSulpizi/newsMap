@@ -1,4 +1,7 @@
-Only scrape if document updated since last check
+include "AT" in score near, IN, from, ect.
+
+
+
 Be able to search by date/location
 
 classify articles by genre

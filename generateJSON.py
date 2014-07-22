@@ -6,7 +6,7 @@ articleLoc = {}
 
 t = ()
 c = conn.cursor()
-c.execute('SELECT primaryLocation,headline,subline,date,url,source,locationName,secondaryLocations FROM articles WHERE (timestamp >= date("now", "-7 days"))', t)
+c.execute('SELECT primaryLocation,headline,subline,date,url,source,locationName,secondaryLocations,timestamp FROM articles WHERE (timestamp >= date("now", "-7 days")) ORDER BY timestamp DESC limit 100', t)
 
 for each in c.fetchall():
     latlong = geohasher.decode(each[0])
@@ -18,5 +18,5 @@ for each in c.fetchall():
 conn.close()
 
 import json
-with open('webpage/data.txt', 'w') as outfile:
+with open('webpage/data/data.txt', 'w') as outfile:
     json.dump(articleLoc, outfile)

@@ -1,5 +1,0 @@
-                    +locationInfo[key][key2].subline+"<br>"
-                    +locationInfo[key][key2].date+"<br>"
-                    +locationInfo[key][key2].locationName+"<br>"
-                    +locationInfo[key][key2].source+"<br>"
-                    +"<br>";

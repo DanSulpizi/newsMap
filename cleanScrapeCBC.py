@@ -186,7 +186,7 @@ class NewsPageClassifier:
             return "\n######################################################\n" + str(self.headline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','') + "\n" + str(self.subline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','') + "\n" + str(self.date) + "\n" + str(self.url) + "\n" + str(self.source) + "\n" + str(self.primaryLocation) + "\n" + str(self.secondaryLocations) + "\n"
 
     #Todo, get data list of officials
-    forbiddenNames = ["Vladimir Putin", "Putin", "President Barack Obama", "Barack Obama", "Obama", "Merek", "Costa Concordia", "Nobel Prize", "Van Dam", "Mark Rutte", "Iron Dome", "Iron Curtain",]
+    forbiddenNames = ["Vladimir Putin", "Putin", "President Barack Obama", "Barack Obama", "Obama", "Merek", "Costa Concordia", "Nobel Prize", "Van Dam", "Mark Rutte", "Iron Dome", "Iron Curtain", "Congress"]
 
     def __init__(self, articleItems):
         self.articleItems = articleItems
