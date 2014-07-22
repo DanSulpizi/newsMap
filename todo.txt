@@ -1,7 +1,9 @@
 include "AT" in score near, IN, from, ect.
+Handle US States better
 
-generate json Currently uses set so order is not preserved
+generate json currently uses unorderedmap so order is not preserved
 
 Be able to search by date/location
 
 classify articles by genre
+add countries to country list based on genre found

@@ -1,64 +1,15 @@
-import requests
 import re
 import string
-import heapq
-from lxml import html
+
 from nltk import word_tokenize, pos_tag
 from copy import deepcopy
 from math import log   
 
 import provinceList
+import scraper
 
 import sqlite3
 conn = sqlite3.connect('locations.db')
-    
-##SCRAPING TOOLS
-def generalScrape(url, xPath, forbidDupes = False):
-    page = requests.get(url)
-    tree = html.fromstring(page.text)
-    table = tree.xpath(xPath)
-    
-    returnList = []
-    
-    if(not forbidDupes):
-        return table
-
-    else:
-        seen = set()
-        for item in table:
-            if item not in seen: #remove duplicates in a given page, for all pages would take much longer
-                seen.add(item)
-                returnList.append(item)
-                
-    return returnList
-
-def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//div[@class="wrap8 landing-primary"]//a/@href'):
-    linkList = generalScrape(url, xPath, True)
-    cleanLinkList = []
-    
-    for link in linkList:
-        if ("http://" not in link and "#" not in link and "?" not in link):
-            cleanLinkList.append("http://www.cbc.ca" + link)
-            print link
-    
-    countryList = loadCountryList()
-    cityList = loadCityList()
-    
-    # for link in cleanLinkList:
-    for link in [cleanLinkList[0]]:
-        articleItems = getItemsFromCBCArticle(link)
-        workWithArticleItems(articleItems, cityList, countryList)
-    
-def getItemsFromCBCArticle(url):
-    page = requests.get(url)
-    tree = html.fromstring(page.text)
-    headline = tree.xpath('//body//div[@class="content-body story"]/div[@id="content"]/div[@class="colfull"]/div[@class="story-headline"]/h1[@class="story-title"]/text()')
-    subline = tree.xpath('//body//div[@class="content-body story"]/div[@id="content"]/div[@class="colfull"]/h3[@class="story-deck"]/text()')
-    if(headline == []): return
-    # date = tree.xpath('//body//div[@class="content-body story"]//span[@class="delimited"]/text()')
-    date = tree.xpath('//body//div[@class="content-body story"]//p[@class="small lighttext"]//text()')
-    text = tree.xpath('//body//div[@class="content-body story"]//div[@class="story-body"]/div[@class="story-content"]/p//text()')
-    return {"headline" : headline, "subline" : subline, "date" : date, "url" : url, "text" : text, "source": "cbc"}
     
 #SCORE SYSTEMS
 class NewsPageClassifier:
@@ -95,6 +46,7 @@ class NewsPageClassifier:
         
         provinceMatch = False
         
+        #combines the score of matching locations
         def add(self, score):
             self.isHeadline = (self.isHeadline or score.isHeadline)
             self.isSubline = (self.isSubline or score.isSubline)
@@ -111,6 +63,7 @@ class NewsPageClassifier:
 
             self.numCombinedScores += score.numCombinedScores   
         
+        #makes two scores into one average score
         def combine(self, score, matchBonus = True):
             matchBonus = 1.5
             
@@ -186,7 +139,7 @@ class NewsPageClassifier:
             return "\n######################################################\n" + str(self.headline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','') + "\n" + str(self.subline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','') + "\n" + str(self.date) + "\n" + str(self.url) + "\n" + str(self.source) + "\n" + str(self.primaryLocation) + "\n" + str(self.secondaryLocations) + "\n"
 
     #Todo, get data list of officials
-    forbiddenNames = ["Vladimir Putin", "Putin", "President Barack Obama", "Barack Obama", "Obama", "Merek", "Costa Concordia", "Nobel Prize", "Van Dam", "Mark Rutte", "Iron Dome", "Iron Curtain", "Congress"]
+    forbiddenNames = ["Vladimir Putin", "Putin", "President Barack Obama", "Barack Obama", "Obama", "Merek", "Costa Concordia", "Nobel Prize", "Van Dam", "Mark Rutte", "Iron Dome", "Iron Curtain", "Congress", "Rick Perry"]
 
     def __init__(self, articleItems):
         self.articleItems = articleItems
@@ -210,8 +163,8 @@ class NewsPageClassifier:
             #if the word is a proper noun or if it starts uppercase and is an adjective (Language)
             if len(word[0]) > 1 and (word[1] == 'NNP' or (word[0].istitle() and (word[1] == 'NNS' or word[1] == 'JJ'))) :
                 w = word[0].lower().replace('.','')
-                # print word
                 
+                #score setup
                 currScore = self.Score()
                 
                 currScore.isHeadline = isHeadline
@@ -223,6 +176,7 @@ class NewsPageClassifier:
                 
                 currScore.sentencePosition = (sentence/float(sentenceNum))
                 
+                #keep track of all words we see so we can use them again without tokenizing
                 inList = False
                 for item in self.listOfNNP:
                     if(item[0] == w): 
@@ -243,6 +197,7 @@ class NewsPageClassifier:
                         found = True
                         break #only find highest on list
                         
+                #add when country/nationality/language match
                 if(not found and len(w) > 2):
                     regexp = re.compile(r'\b%s\b' % w, re.I)
                     for country in self.locationLists.countryList:
@@ -267,6 +222,7 @@ class NewsPageClassifier:
             for result in c.fetchall():
                 currResults.append(result)
         
+        #find provinces/states
         for NNP in self.listOfNNP:
             if NNP[0] in provinceList.provinces:
                 foundProvinces.append(NNP[0])
@@ -280,8 +236,7 @@ class NewsPageClassifier:
                             break
                     if(found): break
         
-        # print foundProvinces
-        
+        #combine cities and countries
         for NNP in self.listOfNNP:
             regexp = re.compile(r'\b%s\b' % NNP[0], re.I)
             for result in currResults: #each city
@@ -291,8 +246,6 @@ class NewsPageClassifier:
 
                     sc = deepcopy(self.countriesInArticle[loc[0].lower()])
                     
-                    #Score based on match percent
-
                     inList = False
                     #combine cities with same name, country, and general area: only return most populous area
                     for location in self.locationList:
@@ -326,7 +279,7 @@ class NewsPageClassifier:
                             if(not inList2): location.key.append(NNP[0])
                             break
                     
-                    #TODO should cities gain the headline bonus of their country?
+                    #Score based on match percent
                     NNP[-1].matchPercent = len(NNP[0])/float(len(result[-1].replace(' ','')))
                     sc.combine(NNP[-1])
                     
@@ -376,6 +329,7 @@ class NewsPageClassifier:
             c = conn.cursor()
             currResults = []
             
+            #check to see if URL exists and has not been updated since last check
             t = (url,)
             c.execute('SELECT url,date FROM articles WHERE url=?', t)
             currResults = c.fetchone()
@@ -414,13 +368,12 @@ class NewsPageClassifier:
                     
                     self.findCountriesInPOS(partsOfSpeech, sentence = sentenceCount, sentenceNum = sentenceNum)
                     sentenceCount += 1
-                    
-                # for each in self.countriesInArticle: print each + " " + self.countriesInArticle[each].printInfo()
-                
+                                    
                 self.findCitiesInCountries()
                 
                 returnList = []
                 
+                #secondary locations have to have at least half the score of the primary location
                 firstFlag = False
                 for item in self.locationList:
                     if(not firstFlag): firstFlag = True
@@ -428,16 +381,18 @@ class NewsPageClassifier:
                         if(item.score.toValue() > (self.locationList[0].score.toValue()/2.)):
                             returnList.append(item.location)
                 
-                
-                article = self.Article(headline, subline, date, url, source, self.locationList[0], returnList)
+                if len(self.locationList) > 0:
+                    article = self.Article(headline, subline, date, url, source, self.locationList[0], returnList)
 
-                print str(headline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','')
-                
-                # print headline+ " " +subline+ " " +date+ " " +url+ " " +source+ " " +self.locationList[0]+ " " +returnList
-                
-                t = (headline,subline,date,url,source,str(self.locationList[0].location),(str(self.locationList[0].city) + " " + str(self.locationList[0].country)),str(returnList),)
-                c.execute('INSERT or REPLACE into articles(headline, subline, date, url, source, primaryLocation, locationName, secondaryLocations) values(?,?,?,?,?,?,?,?)', t)
-                
+                    print str(headline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','')
+                    
+                    # print headline+ " " +subline+ " " +date+ " " +url+ " " +source+ " " +self.locationList[0]+ " " +returnList
+                    
+                    t = (headline,subline,date,url,source,str(self.locationList[0].location),(str(self.locationList[0].city) + " " + str(self.locationList[0].country)),str(returnList),)
+                    c.execute('INSERT or REPLACE into articles(headline, subline, date, url, source, primaryLocation, locationName, secondaryLocations) values(?,?,?,?,?,?,?,?)', t)
+                else: 
+                    print "Unable to find location: "
+                    print str(headline).replace(u'\u2019', '').replace(u'\u2014', '').replace(u'\u201c', '').replace(u'\u200b', '').replace(u'\u201d','')
 
             else:
                 print "#"
@@ -445,7 +400,7 @@ class NewsPageClassifier:
         else: return 
 
 def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//div[@class="wrap8 landing-primary"]//a/@href'):
-    linkList = generalScrape(url, xPath, True)
+    linkList = scraper.generalScrape(url, xPath, True)
     cleanLinkList = []
     
     for link in linkList:
@@ -456,7 +411,7 @@ def generateGoodLinksCBC(url = 'http://www.cbc.ca/news/world', xPath = '//body//
     
     # for link in [cleanLinkList[13]]:             
     for link in cleanLinkList:             
-        articleItems = getItemsFromCBCArticle(link)
+        articleItems = scraper.getItemsFromCBCArticle(link)
         npc = NewsPageClassifier(articleItems)
         npc.workWithArticleItems()
         

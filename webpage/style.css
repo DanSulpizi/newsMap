@@ -4,7 +4,7 @@ margin:0px;
 background: #ddd;
 background-position:top; 
 font-family: 'Droid Serif', serif;
-font-size:90%;
+font-size:88%;
 }
 
 a{
@@ -38,7 +38,7 @@ margin-bottom:5px;
 font-family: 'Oswald', sans-serif;
 color: #fff;
 padding:0px;
-padding-top:40px;
+padding-top:35px;
 margin:0px;
 text-transform:uppercase;
 font-size:275%;
@@ -91,13 +91,14 @@ padding-right:5%;
 #cards{
     text-align:center;  
     height: 400px;
-    overflow-y: scroll;
+    overflow-y: hidden;
     overflow-x: hidden;
 }
 
-#cards::-webkit-scrollbar { 
-    display: none; 
+#cards:hover{
+    overflow-y: scroll;
 }
+
 
 .story{
     text-align: left;
