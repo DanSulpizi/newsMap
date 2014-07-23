@@ -27,7 +27,6 @@ def getItemsFromCBCArticle(url):
     headline = tree.xpath('//body//div[@class="content-body story"]/div[@id="content"]/div[@class="colfull"]/div[@class="story-headline"]/h1[@class="story-title"]/text()')
     subline = tree.xpath('//body//div[@class="content-body story"]/div[@id="content"]/div[@class="colfull"]/h3[@class="story-deck"]/text()')
     if(headline == []): return
-    # date = tree.xpath('//body//div[@class="content-body story"]//span[@class="delimited"]/text()')
     date = tree.xpath('//body//div[@class="content-body story"]//p[@class="small lighttext"]//text()')
     text = tree.xpath('//body//div[@class="content-body story"]//div[@class="story-body"]/div[@class="story-content"]/p//text()')
     return {"headline" : headline, "subline" : subline, "date" : date, "url" : url, "text" : text, "source": "cbc"}

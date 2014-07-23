@@ -93,10 +93,12 @@ padding-right:5%;
     height: 400px;
     overflow-y: hidden;
     overflow-x: hidden;
+    padding-right:20px;
 }
 
 #cards:hover{
     overflow-y: scroll;
+    padding-right:0px;
 }
 
 

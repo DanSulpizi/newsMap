@@ -320,6 +320,7 @@ class NewsPageClassifier:
             url = self.articleItems["url"]
             source = self.articleItems["source"]
 
+            #find latest date, TODO this is specific to CBC
             for each in self.articleItems["date"]:
                 if "Posted" in each:
                     date = each
