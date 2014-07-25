@@ -45,11 +45,12 @@
                 }
                 $("#"+this.options.win_url+"-card").prependTo("#cards");
                 $("#"+this.options.win_url+"-card").children().addClass("story_bright");
-                $("#cards").animate({scrollTop: 0}, 'slow');
                 
                 if(!resetflag){
                     raiseMap();
                 }
+                
+                $("#cards").animate({scrollTop: 0}, 'slow');
             }
             
             $("#cards").hide();
