@@ -17,8 +17,11 @@
         <div id="header"><h1>News Map</h1></div>
         <div id="body">
             <div id="content">
-                <div id='map' class="map"></div>
-
+            
+                <div id="mapContainer" class="mapContainer">
+                    <div id='map' class="map"></div>
+                </div>
+                <div id="extendBar"><img src="arrDown.png"/><img src="arrUp.png"/></div>
                 <div id="cards">
             
                 </div>
@@ -34,6 +37,8 @@
                 attribution: '<a href="http://www.mapbox.com/about/maps/" target="_blank">Terms &amp; Feedback</a>'
             });
 
+            var resetflag = false;
+            
             function prepender(e){
                 for(var each in markerList){
                     $("#"+markerList[each].options.win_url+"-card").children().removeClass("story_bright");
@@ -41,6 +46,51 @@
                 $("#"+this.options.win_url+"-card").prependTo("#cards");
                 $("#"+this.options.win_url+"-card").children().addClass("story_bright");
                 $("#cards").animate({scrollTop: 0}, 'slow');
+                
+                if(!resetflag){
+                    raiseMap();
+                }
+            }
+            
+            $("#cards").hide();
+            
+            $("#extendBar").click(function(){
+                resetSize();
+            });
+            
+            function lowerMap(){
+                $("#mapContainer").animate({
+                    height: "+=410",
+                  }, 500, function() {
+                    // Animation complete.
+                  });
+                $("#cards").hide();
+                resetflag = false;
+            }
+
+            function raiseMap(){
+                $("#mapContainer").animate({
+                        height: "-=410",
+                      }, 500, function() {
+                        // Animation complete.
+                      });
+                $("#cards").show();
+                resetflag = true;
+            }
+            
+            $( window ).resize(function() {
+                $("#mapContainer").removeAttr( 'style' );
+                $("#cards").hide();
+                resetflag = false;
+            });
+            
+            function resetSize(){
+                if(resetflag){
+                    lowerMap();
+                }
+                else{
+                    raiseMap();
+                }
             }
             
             var map = L.map('map')

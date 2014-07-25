@@ -30,23 +30,23 @@ margin-bottom:5px;
     animation: fadeIn 2s;
     background: rgba(118,187,159,1);
     width:100%;
-    height:90px;
+    height:55px;
     text-align: center;
+    padding:0px;
+    padding-top:25px;
 }
 
 #header h1{
 font-family: 'Oswald', sans-serif;
 color: #fff;
 padding:0px;
-padding-top:35px;
 margin:0px;
 text-transform:uppercase;
 font-size:275%;
 }
 
 #body{
-padding-left:5%;
-padding-right:5%;
+    
 }
 
 #content{
@@ -54,46 +54,80 @@ padding-right:5%;
     width: 100%;
 }
 
-#map {	
+#map{
+    height:100%;
+    width:100%;
+}
+
+#extendBar{
+    text-align:center;
+    height:20px;
+    background-color:#333;
+}
+
+#mapContainer {
+    border-top: 3px rgba(94,150,127,1) solid;
+    border-bottom: 2px rgba(94,150,127,1)  solid;
 	width: 100%;		/* desired width */
-    height: 480px;
-    margin:5px;
+    height: 925px;
+}
+
+@media only screen and (max-height: 1050px){
+    #mapContainer {		/* desired width */
+        height: 875px;
+    }
 }
 
 @media only screen and (max-height: 1000px){
-    #map {		/* desired width */
-        height: 400px;
+    #mapContainer {		/* desired width */
+        height: 825px;
     }
 }
 
-@media only screen and (max-height: 901px){
-    #map {		/* desired width */
-        height: 380px;
+@media only screen and (max-height: 950px){
+    #mapContainer {		/* desired width */
+        height: 775px;
     }
 }
-@media only screen and (max-height: 801px){
-    #map {		/* desired width */
-        height: 360px;
+@media only screen and (max-height: 900px){
+    #header{
+        padding-top: 0px;
+    }  
+    
+    #mapContainer {		/* desired width */
+        height: 750px;
     }
 }
-@media only screen and (max-height: 701px){
-    #map {		/* desired width */
-        height: 340px;
+@media only screen and (max-height: 850px){
+    #mapContainer {		/* desired width */
+        height: 700px;
     }
 }
-@media only screen and (max-height: 601px){
-    #map {		/* desired width */
-        height: 320px;
+@media only screen and (max-height: 800px){
+    #mapContainer {		/* desired width */
+        height: 650px;
     }
 }
-
+@media only screen and (max-height: 750px){
+    #mapContainer {		/* desired width */
+        height: 600px;
+    }
+}
+@media only screen and (max-height: 700px){
+    #mapContainer {		/* desired width */
+        height: 550px;
+    }
+}
 
 #cards{
     text-align:center;  
-    height: 400px;
+    height: 390px;
     overflow-y: hidden;
     overflow-x: hidden;
     padding-right:20px;
+    margin-top:5px;
+    margin-left:20px;
+    margin-right:20px;
 }
 
 #cards:hover{
